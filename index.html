@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prueba de velocidad</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 40px;">
+  <h1>⏱️ Midiendo...</h1>
+  <p id="resultado">Esperando...</p>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    const inicio = performance.now();
+
+    tg.onEvent('viewport_changed', (event) => {
+      if (event.isStateStable === true) {
+        const tiempo = performance.now() - inicio;
+        document.getElementById('resultado').innerHTML =
+          '<strong style="font-size: 48px;">' + tiempo.toFixed(0) + ' ms</strong>' +
+          '<br><br>Toma captura de pantalla y cierra.';
+      }
+    });
+
+    setTimeout(() => {
+      if (document.getElementById('resultado').innerText === 'Esperando...') {
+        const tiempo = performance.now() - inicio;
+        document.getElementById('resultado').innerHTML =
+          '<strong>' + tiempo.toFixed(0) + ' ms</strong><br>(tiempo máximo)';
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
