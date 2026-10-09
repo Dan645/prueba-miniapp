@@ -3,36 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prueba de velocidad</title>
+  <title>Prueba Mini App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #17212b;
+      color: #fff;
+      margin: 0;
+    }
+    h1 { font-size: 20px; }
+    button {
+      background: #2ea6ff;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      border-radius: 10px;
+      width: 100%;
+      margin-top: 20px;
+    }
+    pre {
+      background: #0e1621;
+      padding: 15px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    .ok { color: #4caf50; }
+    .error { color: #f44336; }
+  </style>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding: 40px;">
-  <h1>⏱️ Midiendo...</h1>
-  <p id="resultado">Esperando...</p>
+<body>
+  <h1>🧪 Prueba de conexión</h1>
+  <p id="estado">Iniciando...</p>
+  <button onclick="probar()">Probar conexión con backend</button>
+  <pre id="resultado"></pre>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
 
-    const inicio = performance.now();
+    const BACKEND_URL = "https://mi-bot-din-production.up.railway.app";
 
-    tg.onEvent('viewport_changed', (event) => {
-      if (event.isStateStable === true) {
-        const tiempo = performance.now() - inicio;
-        document.getElementById('resultado').innerHTML =
-          '<strong style="font-size: 48px;">' + tiempo.toFixed(0) + ' ms</strong>' +
-          '<br><br>Toma captura de pantalla y cierra.';
-      }
-    });
+    document.getElementById('estado').innerHTML =
+      'Hola <b>' + (tg.initDataUnsafe?.user?.first_name || 'usuario') + '</b>';
 
-    setTimeout(() => {
-      if (document.getElementById('resultado').innerText === 'Esperando...') {
-        const tiempo = performance.now() - inicio;
-        document.getElementById('resultado').innerHTML =
-          '<strong>' + tiempo.toFixed(0) + ' ms</strong><br>(tiempo máximo)';
+    async function probar() {
+      const resultado = document.getElementById('resultado');
+      resultado.textContent = 'Enviando...';
+
+      try {
+        const response = await fetch(BACKEND_URL + '/api/validar-inicio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: tg.initData })
+        });
+
+        const data = await response.json();
+        resultado.innerHTML = '<span class="ok">✅ Respuesta del backend:</span>\n\n' +
+          JSON.stringify(data, null, 2);
+      } catch (error) {
+        resultado.innerHTML = '<span class="error">❌ Error:</span>\n\n' + error.message;
       }
-    }, 5000);
+    }
   </script>
 </body>
 </html>
