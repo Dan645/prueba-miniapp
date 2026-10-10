@@ -49,7 +49,6 @@
     button:active { opacity: 0.8; }
     .cargando { text-align: center; padding: 40px; color: #b8c4d0; }
 
-    /* Categoría (Gas / Agua) */
     .categoria-btn {
       display: flex;
       align-items: center;
@@ -79,7 +78,6 @@
       flex: 1;
     }
 
-    /* Lista de productos */
     .productos-lista {
       background: #0e1621;
       border-radius: 14px;
@@ -105,7 +103,6 @@
     .producto-nombre { font-size: 17px; color: #fff; }
     .producto-precio { font-size: 17px; color: #2ea6ff; font-weight: 600; }
 
-    /* Carrito */
     .carrito-titulo {
       font-size: 28px;
       margin-bottom: 15px;
@@ -142,12 +139,6 @@
       margin: 0;
     }
     .btn-cantidad:active { background: #3a4a5a; }
-    .cantidad-num {
-      font-size: 18px;
-      font-weight: 700;
-      min-width: 24px;
-      text-align: center;
-    }
     .carrito-total {
       display: flex;
       justify-content: space-between;
@@ -171,7 +162,6 @@
       padding: 12px;
     }
 
-    /* Barra de pestañas */
     .tabbar {
       position: fixed;
       bottom: 0;
@@ -201,7 +191,6 @@
 
   <div id="cargando" class="cargando">Cargando...</div>
 
-  <!-- ============ REGISTRO ============ -->
   <div id="p1" class="pantalla">
     <h1>👋 ¡Hola!</h1>
     <p id="p1-texto"></p>
@@ -263,7 +252,6 @@
     <button class="secundario" onclick="mostrar('p7')">⬅ Atrás</button>
   </div>
 
-  <!-- ============ APP ============ -->
   <div id="app" class="pantalla">
     <div id="pedidos-contenido"></div>
   </div>
@@ -296,26 +284,7 @@
     const BACKEND = "https://mi-bot-din-production.up.railway.app";
     const datos = { nombre: "", lat: null, lon: null, urbanizacion: "", referencia: "", valvula: "" };
     let usuarioActual = null;
-
-    // ---------- PRODUCTOS ----------
-    const GAS_ESTANDAR = [
-      { key: "caserito", nombre: "Caserito", precio: 52 },
-      { key: "limagas", nombre: "Limagas", precio: 55 },
-      { key: "llamagas", nombre: "Llamagas", precio: 53 },
-      { key: "solgas", nombre: "Solgas", precio: 56 },
-    ];
-    const GAS_PREMIUM = [
-      { key: "flamagas", nombre: "Flamagas", precio: 50 },
-      { key: "limagas", nombre: "Limagas", precio: 55 },
-      { key: "llamagas", nombre: "Llamagas", precio: 53 },
-      { key: "solgas", nombre: "Solgas", precio: 56 },
-    ];
-    const AGUA = [
-      { key: "aguafiel", nombre: "Aguafiel", precio: 12 },
-      { key: "aguamiel", nombre: "Aguamiel", precio: 11 },
-      { key: "cielo", nombre: "Cielo", precio: 13 },
-      { key: "sanluis", nombre: "San Luis", precio: 15 },
-    ];
+    let productosConfig = null;
 
     let carrito = [];
     let gasAbierto = false;
@@ -328,7 +297,6 @@
 
     function cerrar() { tg.close(); }
 
-    // ---------- INIT ----------
     async function init() {
       const username = tg.initDataUnsafe?.user?.username || "";
 
@@ -365,11 +333,35 @@
       }
     }
 
-    // ---------- APP ----------
-    function abrirApp() {
+    async function abrirApp() {
+      await cargarProductos();
       document.getElementById('tabbar').classList.add('activa');
       mostrar('app');
       cargarPedidos();
+    }
+
+    async function cargarProductos() {
+      if (productosConfig) return productosConfig;
+      try {
+        const r = await fetch('productos.json');
+        productosConfig = await r.json();
+        return productosConfig;
+      } catch (e) {
+        console.error("Error cargando productos:", e);
+        return null;
+      }
+    }
+
+    function getGasProductos() {
+      if (!productosConfig) return [];
+      return usuarioActual.tipo_valvula === 'premium'
+        ? productosConfig.gas_premium
+        : productosConfig.gas_estandar;
+    }
+
+    function getAguaProductos() {
+      if (!productosConfig) return [];
+      return productosConfig.agua;
     }
 
     function cambiarTab(tab, el) {
@@ -387,7 +379,6 @@
       }
     }
 
-    // ---------- PEDIDOS ----------
     async function cargarPedidos() {
       const cont = document.getElementById('pedidos-contenido');
       cont.innerHTML = '<div class="cargando">Cargando pedidos...</div>';
@@ -397,7 +388,6 @@
         const data = await r.json();
         const pedidos = data.pedidos || [];
 
-        // Si tiene 2 pedidos activos, no puede pedir más
         if (pedidos.length >= 2) {
           let html = '';
           pedidos.forEach(p => { html += renderPedidoCard(p); });
@@ -406,7 +396,6 @@
           return;
         }
 
-        // Si tiene 1 pedido activo, lo muestra + permite pedir otro
         if (pedidos.length === 1) {
           let html = '';
           pedidos.forEach(p => { html += renderPedidoCard(p); });
@@ -415,7 +404,6 @@
           return;
         }
 
-        // Sin pedidos
         cont.innerHTML = renderPanelPedido(false, 0);
       } catch (e) {
         cont.innerHTML = '<p style="color:#f44336">Error al cargar pedidos</p>';
@@ -433,8 +421,8 @@
         total += sub;
         const tipo = item.tipo || '';
         let nombreProd = item.nombre || '';
-        if (tipo === 'E' || tipo === 'P') nombreProd = 'Balón de gas ' + nombreProd + ' 10kg';
-        else if (tipo === '') nombreProd = 'Bidón agua ' + nombreProd + ' 20L';
+        if (tipo === 'gas') nombreProd = 'Balón de gas ' + nombreProd + ' 10kg';
+        else if (tipo === 'agua') nombreProd = 'Bidón agua ' + nombreProd + ' 20L';
         itemsHtml += '<div class="carrito-item"><div class="carrito-item-info"><div class="carrito-item-nombre">' + cant + '  ' + nombreProd + '</div></div><div class="carrito-item-precio">S/' + sub + '</div></div>';
       });
 
@@ -447,11 +435,9 @@
              '</div>';
     }
 
-    // ---------- PANEL DE PEDIDO (inicial + catálogo) ----------
     function renderPanelPedido(mostrarBotonAtras, pedidosCount) {
       let html = '';
 
-      // Saludo y pregunta solo si NO hay productos
       if (carrito.length === 0) {
         html += '<h1>¡Hola, ' + usuarioActual.nombre + '! 👋</h1>';
         html += '<p>¿Qué te podemos atender?</p>';
@@ -459,12 +445,10 @@
         html += renderCarrito();
       }
 
-      // Si hay 1 pedido activo, mostrar texto recordatorio
       if (mostrarBotonAtras) {
         html += '<p style="margin-top:15px">' + usuarioActual.nombre + ', puedes hacer un pedido más, por si se te olvidó algo.</p>';
       }
 
-      // Botón GAS
       if (gasAbierto) {
         html += '<button class="categoria-btn" onclick="toggleGas()"><span class="emoji">∧</span><span class="texto">GAS 10kg, Elige un proveedor:</span></button>';
         html += renderProductos(getGasProductos(), 'gas');
@@ -472,24 +456,18 @@
         html += '<button class="categoria-btn" onclick="toggleGas()"><span class="emoji">🔥</span><span class="texto">GAS</span></button>';
       }
 
-      // Botón AGUA
       if (aguaAbierta) {
         html += '<button class="categoria-btn agua" onclick="toggleAgua()"><span class="emoji">∧</span><span class="texto">AGUA 20L, Elige una marca:</span></button>';
-        html += renderProductos(AGUA, 'agua');
+        html += renderProductos(getAguaProductos(), 'agua');
       } else {
         html += '<button class="categoria-btn agua" onclick="toggleAgua()"><span class="emoji">💧</span><span class="texto">Agua</span></button>';
       }
 
-      // Botón atrás solo si hay 1 pedido activo
       if (mostrarBotonAtras) {
         html += '<button class="secundario" onclick="cargarPedidos()">⬅</button>';
       }
 
       return html;
-    }
-
-    function getGasProductos() {
-      return usuarioActual.tipo_valvula === 'premium' ? GAS_PREMIUM : GAS_ESTANDAR;
     }
 
     function renderProductos(lista, tipo) {
@@ -531,7 +509,6 @@
       return html;
     }
 
-    // ---------- ACCIONES ----------
     function toggleGas() {
       gasAbierto = !gasAbierto;
       if (gasAbierto) aguaAbierta = false;
@@ -571,7 +548,35 @@
 
     async function confirmarPedido() {
       if (carrito.length === 0) return;
-      alert("Pedido listo para enviar (" + carrito.length + " items).\n\nFalta conectar con el bot.");
+      const btn = event.target;
+      btn.textContent = "Enviando...";
+      btn.disabled = true;
+
+      try {
+        const r = await fetch(BACKEND + '/api/pedido', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            initData: tg.initData,
+            carrito: carrito
+          })
+        });
+        const data = await r.json();
+        if (data.ok) {
+          carrito = [];
+          gasAbierto = false;
+          aguaAbierta = false;
+          await cargarPedidos();
+        } else {
+          alert("Error: " + (data.detail || "No se pudo enviar"));
+          btn.textContent = "Confirmar";
+          btn.disabled = false;
+        }
+      } catch (e) {
+        alert("Error de conexión");
+        btn.textContent = "Confirmar";
+        btn.disabled = false;
+      }
     }
 
     function refrescarPanel() {
@@ -579,7 +584,6 @@
       cont.innerHTML = renderPanelPedido(false, 0);
     }
 
-    // ---------- SOBRE ESTE PEDIDO ----------
     async function verSobre(pedidoId) {
       try {
         const r = await fetch(BACKEND + '/api/pedidos/' + usuarioActual.id);
@@ -597,8 +601,8 @@
           total += sub;
           const tipo = item.tipo || '';
           let nombreProd = item.nombre || '';
-          if (tipo === 'E' || tipo === 'P') nombreProd = 'Balón de gas ' + nombreProd + ' 10kg';
-          else if (tipo === '') nombreProd = 'Bidón agua ' + nombreProd + ' 20L';
+          if (tipo === 'gas') nombreProd = 'Balón de gas ' + nombreProd + ' 10kg';
+          else if (tipo === 'agua') nombreProd = 'Bidón agua ' + nombreProd + ' 20L';
           itemsHtml += '<div class="carrito-item"><div class="carrito-item-info"><div class="carrito-item-nombre">' + cant + '  ' + nombreProd + '</div></div><div class="carrito-item-precio">S/' + sub + '</div></div>';
         });
 
@@ -620,7 +624,6 @@
       mostrar('app');
     }
 
-    // ---------- REGISTRO ----------
     async function cargarTerminos() {
       try {
         const r = await fetch('terminos.txt');
