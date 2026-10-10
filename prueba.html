@@ -188,6 +188,16 @@
       }
     }
 
+        async function cargarTerminos() {
+      try {
+        const r = await fetch('terminos.txt');
+        const texto = await r.text();
+        document.getElementById('terminos-texto').innerHTML = texto.replace(/\n/g, '<br>');
+      } catch (e) {
+        document.getElementById('terminos-texto').innerHTML = 'No se pudieron cargar los términos.';
+      }
+    }
+
     function verificarUsername() {
       if (tg.initDataUnsafe?.user?.username) {
         document.getElementById('p2-username').textContent = "@" + tg.initDataUnsafe.user.username;
