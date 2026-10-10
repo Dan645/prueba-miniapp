@@ -12,18 +12,19 @@
       background: #17212b;
       color: #fff;
       padding: 20px;
+      padding-bottom: 90px;
       min-height: 100vh;
     }
     .pantalla { display: none; }
     .pantalla.activa { display: block; }
-    h1 { font-size: 22px; margin-bottom: 20px; }
-    p { font-size: 17px !important; line-height: 1.6; color: #b8c4d0; margin-bottom: 15px; }
-    .info { background: #0e1621; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; }
+    h1 { font-size: 24px; margin-bottom: 20px; }
+    p { font-size: 18px !important; line-height: 1.6; color: #b8c4d0; margin-bottom: 15px; }
+    .info { background: #0e1621; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 16px; }
     .info b { color: #fff; }
     input, textarea {
       width: 100%;
       padding: 15px;
-      font-size: 16px;
+      font-size: 18px;
       background: #0e1621;
       border: 1px solid #2b3a4a;
       border-radius: 10px;
@@ -35,7 +36,7 @@
     button {
       width: 100%;
       padding: 15px;
-      font-size: 16px;
+      font-size: 18px;
       border: none;
       border-radius: 10px;
       color: #fff;
@@ -46,16 +47,55 @@
     }
     button.secundario { background: #2b3a4a; }
     button:active { opacity: 0.8; }
-    .ok { color: #4caf50; font-weight: 600; }
-    .error { color: #f44336; font-weight: 600; }
     .cargando { text-align: center; padding: 40px; color: #b8c4d0; }
     .titulo-ok { font-size: 28px; margin-bottom: 15px; }
+
+    /* Pedidos */
+    .pedido-card {
+      background: #0e1621;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 15px;
+      border-left: 4px solid #2ea6ff;
+    }
+    .pedido-titulo { font-size: 17px; color: #2ea6ff; font-weight: 600; margin-bottom: 12px; }
+    .pedido-item { font-size: 16px; color: #fff; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .pedido-total { font-size: 17px; color: #fff; font-weight: 600; margin-top: 10px; display: flex; justify-content: space-between; border-top: 1px solid #2b3a4a; padding-top: 10px; }
+    .pedido-estado { font-size: 15px; color: #b8c4d0; margin-top: 10px; }
+    .limite-msg { background: #2b1f1f; border-left: 4px solid #f44336; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 16px; color: #ffb3b3; }
+    .saludo { font-size: 22px; margin-bottom: 10px; }
+
+    /* Barra de pestañas */
+    .tabbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0e1621;
+      display: none;
+      border-top: 1px solid #2b3a4a;
+      z-index: 100;
+    }
+    .tabbar.activa { display: flex; }
+    .tab {
+      flex: 1;
+      padding: 12px 5px;
+      text-align: center;
+      color: #6c7883;
+      font-size: 12px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .tab .icono { font-size: 22px; display: block; margin-bottom: 3px; }
+    .tab.activo { color: #2ea6ff; }
+    .tab:active { background: #17212b; }
   </style>
 </head>
 <body>
 
   <div id="cargando" class="cargando">Cargando...</div>
 
+  <!-- ============ REGISTRO ============ -->
   <div id="p1" class="pantalla">
     <h1>👋 ¡Hola!</h1>
     <p id="p1-texto"></p>
@@ -117,11 +157,34 @@
     <button class="secundario" onclick="mostrar('p7')">⬅ Atrás</button>
   </div>
 
-  <div id="p9" class="pantalla">
-    <h1 class="titulo-ok">🎉 ¡Bienvenido, <span id="p9-nombre"></span>!</h1>
-    <p>Tu registro está completo.</p>
-    <p>Ya puedes hacer pedidos, estamos a tu disposición.</p>
-    <button onclick="cerrar()">Hacer pedido</button>
+  <!-- ============ APP (usuario registrado) ============ -->
+  <div id="app" class="pantalla">
+    <!-- Pestaña PEDIDOS -->
+    <div id="tab-pedidos" class="tab-content">
+      <div id="pedidos-contenido"></div>
+    </div>
+  </div>
+
+  <!-- Pantalla: Sobre este pedido -->
+  <div id="p-sobre" class="pantalla">
+    <button class="secundario" onclick="volverDeSobre()">⬅ Volver</button>
+    <div id="sobre-contenido"></div>
+  </div>
+
+  <!-- Barra de pestañas -->
+  <div id="tabbar" class="tabbar">
+    <div class="tab activo" onclick="cambiarTab('pedidos')">
+      <span class="icono">🛒</span>
+      Pedidos
+    </div>
+    <div class="tab" onclick="cambiarTab('riper')">
+      <span class="icono">⭐</span>
+      Riper
+    </div>
+    <div class="tab" onclick="cambiarTab('perfil')">
+      <span class="icono">👤</span>
+      Perfil
+    </div>
   </div>
 
   <script>
@@ -131,6 +194,8 @@
 
     const BACKEND = "https://mi-bot-din-production.up.railway.app";
     const datos = { nombre: "", lat: null, lon: null, urbanizacion: "", referencia: "", valvula: "" };
+    let usuarioActual = null;
+    let tabActual = "pedidos";
 
     function mostrar(id) {
       document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
@@ -139,6 +204,7 @@
 
     function cerrar() { tg.close(); }
 
+    // ---------- INIT ----------
     async function init() {
       const username = tg.initDataUnsafe?.user?.username || "";
 
@@ -163,18 +229,176 @@
         document.getElementById('cargando').style.display = 'none';
 
         if (data.registrado) {
-          document.getElementById('p2-username').textContent = "@" + username;
-          document.getElementById('p9-nombre').textContent = data.datos.nombre;
-          mostrar('p9');
+          usuarioActual = data.datos;
+          usuarioActual.id = data.user.id;
+          abrirApp();
         } else {
           document.getElementById('p2-username').textContent = "@" + username;
           mostrar('p2');
         }
       } catch (e) {
-        document.getElementById('cargando').innerHTML = '<span class="error">Error de conexión</span>';
+        document.getElementById('cargando').innerHTML = '<span style="color:#f44336">Error de conexión</span>';
       }
     }
 
+    // ---------- APP ----------
+    function abrirApp() {
+      document.getElementById('tabbar').classList.add('activa');
+      mostrar('app');
+      cargarPedidos();
+    }
+
+    function cambiarTab(tab) {
+      tabActual = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+      event.currentTarget.classList.add('activo');
+
+      if (tab === 'pedidos') {
+        cargarPedidos();
+      } else if (tab === 'riper') {
+        document.getElementById('pedidos-contenido').innerHTML =
+          '<h1>⭐ Riper</h1><p>En construcción...</p>';
+      } else if (tab === 'perfil') {
+        document.getElementById('pedidos-contenido').innerHTML =
+          '<h1>👤 Perfil</h1><p>En construcción...</p>';
+      }
+    }
+
+    // ---------- PEDIDOS ----------
+    async function cargarPedidos() {
+      const cont = document.getElementById('pedidos-contenido');
+      cont.innerHTML = '<div class="cargando">Cargando pedidos...</div>';
+
+      try {
+        const r = await fetch(BACKEND + '/api/pedidos/' + usuarioActual.id);
+        const data = await r.json();
+        const pedidos = data.pedidos || [];
+
+        if (pedidos.length === 0) {
+          cont.innerHTML =
+            '<p class="saludo">¡Hola, ' + usuarioActual.nombre + '! 👋</p>' +
+            '<p>¿Qué te podemos atender?</p>' +
+            '<button onclick="irGas()">🔥 Gas</button>' +
+            '<button onclick="irAgua()">💧 Agua</button>';
+          return;
+        }
+
+        let html = '';
+        pedidos.forEach(p => {
+          html += renderPedidoCard(p);
+        });
+
+        if (pedidos.length >= 2) {
+          html += '<div class="limite-msg">😑 <b>Límite alcanzado</b><br><br>' +
+                  'Ya tienes 2 pedidos en curso.<br><br>' +
+                  'Por favor espera la entrega de al menos uno antes de hacer un nuevo pedido.</div>';
+        } else {
+          html += '<p style="margin-top:20px">' + usuarioActual.nombre + ', puedes hacer un pedido más, por si se te olvidó algo.</p>' +
+                  '<button onclick="irGas()">🔥 Gas</button>' +
+                  '<button onclick="irAgua()">💧 Agua</button>' +
+                  '<button class="secundario" onclick="irInicio()">⬅</button>';
+        }
+
+        cont.innerHTML = html;
+      } catch (e) {
+        cont.innerHTML = '<p style="color:#f44336">Error al cargar pedidos</p>';
+      }
+    }
+
+    function renderPedidoCard(p) {
+      const productos = p.productos || [];
+      let itemsHtml = '';
+      let total = 0;
+      productos.forEach(item => {
+        const cant = item.cantidad || 1;
+        const precio = item.precio || 0;
+        const sub = cant * precio;
+        total += sub;
+        const tipo = item.tipo || '';
+        let nombreProd = item.nombre || '';
+        if (tipo === 'E' || tipo === 'P') {
+          nombreProd = 'Balón de Gas ' + nombreProd + ' 10kg';
+        } else if (tipo === '') {
+          nombreProd = 'Bidón Agua ' + nombreProd + ' 20L';
+        }
+        itemsHtml += '<div class="pedido-item"><span>' + cant + ' ' + nombreProd + '</span><span>S/' + sub + '</span></div>';
+      });
+
+      return '<div class="pedido-card">' +
+             '<div class="pedido-titulo">🛒 Pedido ' + (p.codigo_pedido || '') + ' en curso...</div>' +
+             itemsHtml +
+             '<div class="pedido-total"><span>Total:</span><span>S/' + total + '</span></div>' +
+             '<div class="pedido-estado">Ya está en despacho, llegará pronto.</div>' +
+             '<button style="margin-top:12px" onclick="verSobre(\'' + p.pedido_id + '\')">Sobre este pedido</button>' +
+             '</div>';
+    }
+
+    function irGas() {
+      document.getElementById('pedidos-contenido').innerHTML =
+        '<button class="secundario" onclick="cargarPedidos()">⬅ Volver</button>' +
+        '<h1>🔥 Gas 10kg</h1>' +
+        '<p>Catálogo en construcción...</p>';
+    }
+
+    function irAgua() {
+      document.getElementById('pedidos-contenido').innerHTML =
+        '<button class="secundario" onclick="cargarPedidos()">⬅ Volver</button>' +
+        '<h1>💧 Agua 20L</h1>' +
+        '<p>Catálogo en construcción...</p>';
+    }
+
+    function irInicio() {
+      cargarPedidos();
+    }
+
+    // ---------- SOBRE ESTE PEDIDO ----------
+    let pedidoSobreActual = null;
+
+    async function verSobre(pedidoId) {
+      try {
+        const r = await fetch(BACKEND + '/api/pedidos/' + usuarioActual.id);
+        const data = await r.json();
+        const p = (data.pedidos || []).find(x => x.pedido_id === pedidoId);
+        if (!p) return;
+        pedidoSobreActual = p;
+
+        const productos = p.productos || [];
+        let itemsHtml = '';
+        let total = 0;
+        productos.forEach(item => {
+          const cant = item.cantidad || 1;
+          const precio = item.precio || 0;
+          const sub = cant * precio;
+          total += sub;
+          const tipo = item.tipo || '';
+          let nombreProd = item.nombre || '';
+          if (tipo === 'E' || tipo === 'P') nombreProd = 'Balón de Gas ' + nombreProd + ' 10kg';
+          else if (tipo === '') nombreProd = 'Bidón Agua ' + nombreProd + ' 20L';
+          itemsHtml += '<div class="pedido-item"><span>' + cant + ' ' + nombreProd + '</span><span>S/' + sub + '</span></div>';
+        });
+
+        document.getElementById('sobre-contenido').innerHTML =
+          '<h1>✅ Pedido ' + (p.codigo_pedido || '') + '</h1>' +
+          '<div class="pedido-card">' +
+          itemsHtml +
+          '<div class="pedido-total"><span>Total:</span><span>S/' + total + '</span></div>' +
+          '</div>' +
+          '<div class="info">🏠 ' + (p.direccion || '') + '</div>' +
+          '<p>Ya está en despacho, llegará pronto.</p>' +
+          '<button>📝 Nota al repartidor</button>' +
+          '<button class="secundario">❌ Cancelar pedido</button>';
+
+        mostrar('p-sobre');
+      } catch (e) {
+        alert("Error al cargar pedido");
+      }
+    }
+
+    function volverDeSobre() {
+      mostrar('app');
+    }
+
+    // ---------- REGISTRO (funciones existentes) ----------
     async function cargarTerminos() {
       try {
         const r = await fetch('terminos.txt');
@@ -204,7 +428,6 @@
       document.getElementById('p6-nombre').textContent = n;
       document.getElementById('p7-nombre').textContent = n;
       document.getElementById('p8-nombre').textContent = n;
-      document.getElementById('p9-nombre').textContent = n;
       mostrar('p5');
     }
 
@@ -273,7 +496,16 @@
         });
         const data = await r.json();
         if (data.ok) {
-          mostrar('p9');
+          usuarioActual = {
+            id: data.user_id,
+            nombre: datos.nombre,
+            direccion_zona: datos.urbanizacion,
+            direccion_gps: "https://maps.google.com/?q=" + datos.lat + "," + datos.lon,
+            direccion_referencia: datos.referencia,
+            tipo_valvula: datos.valvula,
+            riper: 0
+          };
+          abrirApp();
         } else {
           alert("Error: " + (data.detail || "No se pudo registrar"));
         }
