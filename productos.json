@@ -1,0 +1,20 @@
+{
+  "gas_estandar": [
+    {"key": "caserito", "nombre": "Caserito", "precio": 52},
+    {"key": "limagas", "nombre": "Limagas", "precio": 55},
+    {"key": "llamagas", "nombre": "Llamagas", "precio": 53},
+    {"key": "solgas", "nombre": "Solgas", "precio": 56}
+  ],
+  "gas_premium": [
+    {"key": "flamagas", "nombre": "Flamagas", "precio": 50},
+    {"key": "limagas", "nombre": "Limagas", "precio": 55},
+    {"key": "llamagas", "nombre": "Llamagas", "precio": 53},
+    {"key": "solgas", "nombre": "Solgas", "precio": 56}
+  ],
+  "agua": [
+    {"key": "aguafiel", "nombre": "Aguafiel", "precio": 12},
+    {"key": "aguamiel", "nombre": "Aguamiel", "precio": 11},
+    {"key": "cielo", "nombre": "Cielo", "precio": 13},
+    {"key": "sanluis", "nombre": "San Luis", "precio": 15}
+  ]
+}
