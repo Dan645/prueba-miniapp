@@ -17,7 +17,7 @@
     .pantalla { display: none; }
     .pantalla.activa { display: block; }
     h1 { font-size: 22px; margin-bottom: 20px; }
-   p { font-size: 18px !important; line-height: 1.6; color: #b8c4d0; margin-bottom: 15px; }
+    p { font-size: 18px !important; line-height: 1.6; color: #b8c4d0; margin-bottom: 15px; }
     .info { background: #0e1621; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; }
     .info b { color: #fff; }
     input, textarea {
@@ -56,32 +56,28 @@
 
   <div id="cargando" class="cargando">Cargando...</div>
 
-  <!-- PANTALLA 1: Verificar username -->
   <div id="p1" class="pantalla">
     <h1>👋 ¡Hola!</h1>
     <p id="p1-texto"></p>
     <button id="p1-btn" onclick="verificarUsername()">✅ Ya lo tengo</button>
   </div>
 
-  <!-- PANTALLA 2: Bienvenida + términos -->
   <div id="p2" class="pantalla">
     <h1>👋 ¡Hola!</h1>
     <p>Qué bueno que ya tienes un username y es necesario para avisarte cuando llegue tu pedido.</p>
     <div class="info">Username: <b id="p2-username">@usuario</b> ✔️</div>
     <p>Antes de registrarte, te invitamos a leer nuestros términos y condiciones. Al continuar con tu registro, confirmas que los has leído y aceptas.</p>
-    <button class="secundario" onclick="cargarTerminos(); mostrar('p3')">
+    <button class="secundario" onclick="cargarTerminos(); mostrar('p3')">📄 Leer términos</button>
     <button onclick="mostrar('p4')">Iniciar registro</button>
     <button class="secundario" onclick="cerrar()">Mejor, luego</button>
   </div>
 
-  <!-- PANTALLA 3: Términos -->
   <div id="p3" class="pantalla">
     <h1>📄 Términos y condiciones</h1>
     <div class="info" id="terminos-texto">Cargando...</div>
     <button class="secundario" onclick="mostrar('p2')">⬅ Volver</button>
   </div>
 
-  <!-- PANTALLA 4: Nombre -->
   <div id="p4" class="pantalla">
     <h1>👤 - - -</h1>
     <p>¿Cuál es tu nombre?</p>
@@ -90,7 +86,6 @@
     <button class="secundario" onclick="mostrar('p2')">⬅ Atrás</button>
   </div>
 
-  <!-- PANTALLA 5: GPS -->
   <div id="p5" class="pantalla">
     <div class="info">👤 <b id="p5-nombre"></b><br>📍 - - -</div>
     <p>Envía tu ubicación GPS</p>
@@ -98,7 +93,6 @@
     <button class="secundario" onclick="mostrar('p4')">⬅ Atrás</button>
   </div>
 
-  <!-- PANTALLA 6: Urbanización -->
   <div id="p6" class="pantalla">
     <div class="info">👤 <b id="p6-nombre"></b><br>📍 <span id="p6-gps"></span></div>
     <p>¿Cuál es tu urbanización?</p>
@@ -107,7 +101,6 @@
     <button class="secundario" onclick="mostrar('p5')">⬅ Atrás</button>
   </div>
 
-  <!-- PANTALLA 7: Referencia -->
   <div id="p7" class="pantalla">
     <div class="info">👤 <b id="p7-nombre"></b><br>📍 <span id="p7-gps"></span><br>🏠 <span id="p7-urb"></span></div>
     <p>Danos una referencia de tu dirección</p>
@@ -116,7 +109,6 @@
     <button class="secundario" onclick="mostrar('p6')">⬅ Atrás</button>
   </div>
 
-  <!-- PANTALLA 8: Válvula -->
   <div id="p8" class="pantalla">
     <div class="info">👤 <b id="p8-nombre"></b><br>📍 <span id="p8-gps"></span><br>🏠 <span id="p8-urb"></span><br>📝 <span id="p8-ref"></span></div>
     <p>🔩 ¿Qué tipo de válvula de gas usas?</p>
@@ -125,7 +117,6 @@
     <button class="secundario" onclick="mostrar('p7')">⬅ Atrás</button>
   </div>
 
-  <!-- PANTALLA 9: Registro completo -->
   <div id="p9" class="pantalla">
     <h1 class="titulo-ok">🎉 ¡Bienvenido, <span id="p9-nombre"></span>!</h1>
     <p>Tu registro está completo.</p>
@@ -150,9 +141,7 @@
 
     async function init() {
       const username = tg.initDataUnsafe?.user?.username || "";
-      const first_name = tg.initDataUnsafe?.user?.first_name || "";
 
-      // Si no tiene username → pantalla 1
       if (!username) {
         document.getElementById('p1-texto').innerHTML =
           "Para avisarte cuando tu pedido llegue, es necesario tu usuario de Telegram.<br><br>" +
@@ -163,7 +152,6 @@
         return;
       }
 
-      // Tiene username → verificar registro en backend
       try {
         const r = await fetch(BACKEND + '/api/validar-inicio', {
           method: 'POST',
@@ -175,7 +163,6 @@
         document.getElementById('cargando').style.display = 'none';
 
         if (data.registrado) {
-          // Ya registrado → mensaje directo (por ahora)
           document.getElementById('p2-username').textContent = "@" + username;
           document.getElementById('p9-nombre').textContent = data.datos.nombre;
           mostrar('p9');
@@ -188,7 +175,7 @@
       }
     }
 
-        async function cargarTerminos() {
+    async function cargarTerminos() {
       try {
         const r = await fetch('terminos.txt');
         const texto = await r.text();
